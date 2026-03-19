@@ -1,3 +1,7 @@
+# ls /dev/ttyUSB*  # ตรวจสอบรายชื่อ ttyUSB ทั้งหมด
+# ถ้ามองไม่เห็น /dev/ttyUSB0
+# sudo apt remove brltty -y #ลบ Service ที่แย่งพอร์ตออก
+# sudo modprobe ch341 #ถอดสาย USB ออกแล้วเสียบใหม่ หรือใช้คำสั่งบังคับให้ระบบโหลด Driver ใหม่
 import serial
 import time
 
