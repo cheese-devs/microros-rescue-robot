@@ -4,6 +4,7 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import CompressedImage, Imu
+from std_msgs.msg import UInt16  
 import time
 
 class SystemWatchdog(Node):
@@ -12,17 +13,20 @@ class SystemWatchdog(Node):
         
         self.last_cam_time = time.time()
         self.last_imu_time = time.time()
+        self.last_battery_time = time.time()
         self.last_imu_z = 0.0
         self.imu_active = False
+        self.battery_voltage = 0.0 # เก็บเป็นหน่วย Volt (float)
         
         # Subscribe กล้อง และ IMU
         self.sub_cam = self.create_subscription(CompressedImage, '/espRos/esp32camera', self.cam_callback, 10)
         self.sub_imu = self.create_subscription(Imu, '/imu', self.imu_callback, 10)
+        self.sub_bat = self.create_subscription(UInt16, '/battery', self.bat_callback, 10)
             
         self.timer = self.create_timer(1.0, self.check_status)
         
         print("\n" + "="*45)
-        print("   YAHBOOM SYSTEM WATCHDOG (IMU Z-CHECK)")
+        print("   YAHBOOM SYSTEM WATCHDOG Cam,(IMU Z-CHECK),BATTERY")
         print("="*45)
 
     def cam_callback(self, msg):
@@ -39,7 +43,11 @@ class SystemWatchdog(Node):
             self.imu_active = True
         else:
             self.imu_active = False
-
+    def bat_callback(self, msg):
+        self.last_battery_time = time.time()
+        # แปลงจาก mV (เช่น 12400) เป็น V (12.4) โดยการหาร 1000
+        # **หมายเหตุ: ถ้าค่าที่ได้มาเป็น V อยู่แล้ว (เช่น 12) ให้เอา / 1000.0 ออกครับ**
+        self.battery_voltage = msg.data / 10.0
     def check_status(self):
         now = time.time()
         
@@ -50,9 +58,13 @@ class SystemWatchdog(Node):
         imu_com_alive = (now - self.last_imu_time) < 2.0
         imu_functional = imu_com_alive and self.imu_active
         
+        bat_alive = (now - self.last_battery_time) < 2.0
+        
         GREEN = '\033[92m'
         RED = '\033[91m'
         RESET = '\033[0m'
+        YELLOW = '\033[93m'
+
         
         cam_status = f"{GREEN}ONLINE{RESET}" if cam_alive else f"{RED}OFFLINE{RESET}"
         
@@ -63,8 +75,20 @@ class SystemWatchdog(Node):
             imu_status = f"{RED}OFFLINE (Sensor Fault / Z=0){RESET}"
         else:
             imu_status = f"{GREEN}ONLINE (IMU.Z: {self.last_imu_z:.2f}){RESET}"
+            
+        if not bat_alive:
+            bat_status = f"{RED}OFFLINE{RESET}"
+        else:
+            # วิเคราะห์สถานะแบตเตอรี่ (สมมติ 3S Battery)
+            if self.battery_voltage > 7.8:
+                color = GREEN
+            elif self.battery_voltage > 7.2:
+                color = YELLOW
+            else:
+                color = RED
+            bat_status = f"{color}{self.battery_voltage:.2f} V{RESET}"
         
-        print(f"[{time.strftime('%H:%M:%S')}] Cam: {cam_status:25} | ROBOT: {imu_status}")
+        print(f"[{time.strftime('%H:%M:%S')}] Cam: {cam_status:25} |ROBOT: {imu_status} |BAT: {bat_status}")
 
 def main():
     rclpy.init()
