@@ -1,16 +1,28 @@
 waypoints:
 - task: waypoint_1
-  x: 2.387
-  y: -0.119
+  x: 0.791
+  y: -0.565
   orientation:
-    z: 0.71333
-    w: 0.70083
+    z: -0.71257
+    w: 0.7016
 - task: waypoint_2
-  x: 0.834
-  y: -0.184
+  x: 1.626
+  y: -0.589
   orientation:
-    z: 0.7003
-    w: 0.71385
+    z: -0.08268
+    w: 0.99658
+- task: waypoint_3
+  x: 2.432
+  y: -1.474
+  orientation:
+    z: 0.99668
+    w: -0.08144
+- task: waypoint_4
+  x: 0.904
+  y: -1.9
+  orientation:
+    z: 0.75323
+    w: 0.65776
 - task: HOME
   x: 0.0
   y: 0.0

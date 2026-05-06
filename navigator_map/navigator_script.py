@@ -102,10 +102,8 @@ def main():
                 task_nav.perform_task(wp['task'])
             elif result == TaskResult.CANCELED:
                 print(f"ภารกิจไป {wp['task']} ถูกยกเลิก")
-                break
             elif result == TaskResult.FAILED:
-                print(f"ไม่สามารถไปถึง {wp['task']} ได้ (อาจมีสิ่งกีดขวาง)")
-                break
+                print(f"ไม่สามารถไปถึง {wp['task']} ได้ (อาจมีสิ่งกีดขวาง) ข้ามไปจุดถัดไป...")
 
         print("\n[SUCCESS] วิ่งครบตามแผนงานแล้ว!")
         print("กลับไปรอรับคำสั่งชุดใหม่...")
