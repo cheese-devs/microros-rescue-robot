@@ -3,38 +3,34 @@ from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
 from geometry_msgs.msg import PoseStamped, Twist
 import yaml
 import time
-import subprocess  # สำหรับรันสคริปต์ภายนอก
+import subprocess
+import os
 
 class TaskNavigator:
     def __init__(self):
         self.nav = BasicNavigator()
         self.cmd_vel_pub = self.nav.create_publisher(Twist, '/cmd_vel', 10)
 
-    def run_external_script(self):
-        """ ฟังก์ชันสำหรับรันสคริปต์ภายนอกและรอจนกว่าจะเสร็จ """
-        script_path = "mission_script.py" # เปลี่ยนเป็นชื่อไฟล์สคริปต์ภารกิจของคุณ
-        print(f"   -> กำลังเริ่มรันสคริปต์ภารกิจ: {script_path}")
-        
+    def run_external_script(self, script_name):
+        script_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), script_name)
+        print(f"   -> รัน: {script_name}")
         try:
-            # รันสคริปต์และรอ (Wait) จนกว่ากระบวนการจะจบ
-            process = subprocess.run(["python3", script_path], check=True)
-            print("   -> ภารกิจในสคริปต์เสร็จสิ้นแล้ว")
+            subprocess.run(["python3", script_path], check=True)
+            print("   -> เสร็จสิ้น")
         except subprocess.CalledProcessError as e:
-            print(f"   -> [ERROR] สคริปต์ภารกิจทำงานผิดพลาด: {e}")
+            print(f"   -> [ERROR] {e}")
         except FileNotFoundError:
-            print(f"   -> [ERROR] ไม่พบไฟล์สคริปต์ที่ระบุ: {script_path}")
+            print(f"   -> [ERROR] ไม่พบไฟล์: {script_path}")
 
-    def perform_task(self, waypoint_name):
-        """ ภารกิจที่ทำเมื่อถึงจุดหมาย """
-        # ตรวจสอบว่าชื่อ waypoint ใช่ "HOME" หรือไม่ (ตัวเล็กตัวใหญ่มีผล)
-        if waypoint_name.upper() == "HOME":
-            print(f"--- ถึงจุด {waypoint_name}: ทำการ Reset ระบบและหยุดรอ ---")
+    def perform_task(self, waypoint_name, wp_type):
+        print(f"--- ถึงจุด {waypoint_name} (ประเภท: {wp_type}) ---")
+        if wp_type == 'h':
             time.sleep(2)
+        elif wp_type == 'a':
+            self.run_external_script("apriltag_script.py")
         else:
-            print(f"--- ถึงจุด {waypoint_name}: เริ่มรันสคริปต์ภารกิจพิเศษ ---")
-            # เรียกรันสคริปต์ภายนอก
-            self.run_external_script()
-            
+            self.run_external_script("mission_script.py")
         print(f"--- เสร็จสิ้นภารกิจที่ {waypoint_name} ---\n")
 def main():
     rclpy.init()
@@ -77,10 +73,21 @@ def main():
             print("[!] ใส่ตัวเลขไม่ถูกต้อง กรุณาลองใหม่")
             continue
 
+        # ถามประเภทแต่ละจุด
+        wp_types = []
+        print("\nระบุประเภทแต่ละจุด (a=apriltag, s=survivor, h=home):")
+        for wp in planned_waypoints:
+            while True:
+                t = input(f"  {wp['task']} [a/s/h]: ").strip().lower()
+                if t in ('a', 's', 'h'):
+                    wp_types.append(t)
+                    break
+                print("  [!] ใส่แค่ a, s, หรือ h")
+
         # เริ่มการเดินทางตามลำดับที่ป้อน
         print(f"\nเริ่มการเดินทางทั้งหมด {len(planned_waypoints)} จุด...")
-        
-        for wp in planned_waypoints:
+
+        for wp, wp_type in zip(planned_waypoints, wp_types):
             goal_pose = PoseStamped()
             goal_pose.header.frame_id = 'map'
             goal_pose.header.stamp = nav.get_clock().now().to_msg()
@@ -99,7 +106,7 @@ def main():
 
             result = nav.getResult()
             if result == TaskResult.SUCCEEDED:
-                task_nav.perform_task(wp['task'])
+                task_nav.perform_task(wp['task'], wp_type)
             elif result == TaskResult.CANCELED:
                 print(f"ภารกิจไป {wp['task']} ถูกยกเลิก")
             elif result == TaskResult.FAILED:
