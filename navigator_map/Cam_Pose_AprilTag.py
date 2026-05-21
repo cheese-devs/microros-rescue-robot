@@ -57,6 +57,14 @@ class MY_Picture(Node):
         # ตัวตรวจจับ Pose
         self.pose_detector = PoseDetector()
 
+        # pre-warm — โหลด model graph ตั้งแต่ start (ตอน robot ยัง navigate / CPU ว่าง)
+        # ครั้งแรกที่ pose.process() / at_detector.detect() ถูกเรียกจะ JIT โหลด ~1-3s
+        # ถ้าไม่ warm ที่นี่ มันจะไปโหลดตอนถึง waypoint แรก → detect ไม่ทันรอบแรก
+        dummy = np.zeros((480, 640, 3), dtype=np.uint8)
+        self.pose_detector.process_pose(dummy, draw=False)
+        self.at_detector.detect(cv.cvtColor(dummy, cv.COLOR_BGR2GRAY))
+        self.get_logger().info("[VISION] pre-warm MediaPipe + AprilTag เสร็จ พร้อม detect")
+
         # toggle ให้ navigator เปิด/ปิด detection — default OFF ลด CPU ตอน navigate
         self.detect_enabled = False
         self.sub_enable = self.create_subscription(

@@ -5,7 +5,7 @@ from geometry_msgs.msg import Twist
 from yahboomcar_msgs.msg import PointArray
 import time
 
-ROTATE_SPEED = 0.3  # rad/s — ช้าพอให้กล้องจับ frame ทัน (~17°/s)
+ROTATE_SPEED = 0.15  # rad/s — ช้าพอให้กล้องจับ frame ทัน (~8.6°/s)
 WARMUP_SEC   = 2.5  # รอกล้องเก็บ frame ก่อนเริ่มหมุน กันหมุนหนีเป้าที่อยู่ตรงหน้าแล้ว
 
 class MissionScanner(Node):

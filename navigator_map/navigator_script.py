@@ -123,6 +123,7 @@ def _run(task_nav, nav):
         # เริ่มการเดินทางตามลำดับที่ป้อน
         print(f"\nเริ่มการเดินทางทั้งหมด {len(planned_waypoints)} จุด...")
         
+        all_done = True  # False ถ้ามี waypoint ถูกยกเลิก/ไปไม่ถึง
         for wp in planned_waypoints:
             goal_pose = PoseStamped()
             goal_pose.header.frame_id = 'map'
@@ -145,12 +146,17 @@ def _run(task_nav, nav):
                 task_nav.perform_task(wp['task'])
             elif result == TaskResult.CANCELED:
                 print(f"ภารกิจไป {wp['task']} ถูกยกเลิก")
+                all_done = False
                 break
             elif result == TaskResult.FAILED:
                 print(f"ไม่สามารถไปถึง {wp['task']} ได้ (อาจมีสิ่งกีดขวาง)")
+                all_done = False
                 break
 
-        print("\n[SUCCESS] วิ่งครบตามแผนงานแล้ว!")
+        if all_done:
+            print("\n[SUCCESS] วิ่งครบตามแผนงานแล้ว!")
+        else:
+            print("\n[ABORT] แผนงานหยุดกลางคัน — มี waypoint ที่ไปไม่ถึง")
         print("กลับไปรอรับคำสั่งชุดใหม่...")
 
 
