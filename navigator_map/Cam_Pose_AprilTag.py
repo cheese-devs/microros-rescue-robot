@@ -20,6 +20,8 @@ class PoseDetector:
         self.mpDraw = mp.solutions.drawing_utils
         self.pose = self.mpPose.Pose(
             static_image_mode=mode,
+            # default model_complexity=1 → pose_landmark_full.tflite (มีในเครื่อง)
+            # อย่าใช้ =0 (lite) — ไฟล์โมเดลไม่มี + เขียน /usr/local ไม่ได้ จะ crash
             smooth_landmarks=smooth,
             min_detection_confidence=detectionCon,
             min_tracking_confidence=trackCon )
