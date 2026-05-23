@@ -68,7 +68,7 @@ class SystemWatchdog(Node):
         imu_com_alive = (now - self.last_imu_time) < 2.0
         imu_functional = imu_com_alive and self.imu_active
 
-        bat_alive  = (now - self.last_battery_time) < 2.0
+        bat_alive  = (now - self.last_battery_time) < 3.0
         scan_alive = (now - self.last_scan_time) < 2.0
         odom_alive = (now - self.last_odom_time) < 2.0
 

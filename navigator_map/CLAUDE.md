@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project context
 
-Autonomous Yahboomcar robot for the **RRR26 competition** (deadline 29 พ.ค. 2026). Stack: ROS 2 Humble + Nav2 + MediaPipe pose + AprilTag (tag36h11) + servo drop. Mission: visit 5 waypoints, at each waypoint detect either a person (servo drop) or an AprilTag (read ID), then return HOME.
+Autonomous Yahboomcar robot for the **RRR26 competition** (แข่งจริง 30-31 พ.ค. 2569 ที่ห้องไดมอนด์ฮอลล์ ชั้น 5 ศูนย์การค้าเซียร์รังสิต). Stack: ROS 2 Humble + Nav2 + MediaPipe pose + AprilTag (tag36h11) + servo drop. Mission: visit 5 waypoints, at each waypoint detect either a person (servo drop) or an AprilTag (read ID), then return HOME.
+
+Format การแข่ง: รอบแรก 3 ครั้ง × 10 นาที (เอา 2 ครั้งดีสุดรวม), 2 ทีมคะแนนสูงสุดเข้ารอบชิง 1 รอบ. คะแนนเต็ม 260 (60 จากภารกิจ + 200 ซูเปอร์บิงโก). **กฎสำคัญ:** หุ่นไม่คืบหน้า >10 วินาที = กรรมการบังคับ retry (เสียโอกาสซูเปอร์บิงโก). ตำแหน่ง/รูปร่างผู้ประสบภัยและ AprilTag ID **ประกาศวันแข่ง + อาจเปลี่ยนระหว่างรอบ** — ต้องแก้ `nav_waypoints.yaml` ได้เร็วหน้างาน.
 
 Working directory (`navigator_map/`) is the runtime project — it must be the CWD when launching, because `nav2_launch.py` uses relative paths (`my_robot_map.yaml`, `prarams/dwb_nav_params.yaml`, `rviz/...`).
 

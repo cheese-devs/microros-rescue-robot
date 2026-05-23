@@ -4,11 +4,17 @@
 import sys, select, termios, tty, time, threading
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist, PoseWithCovarianceStamped
 from std_msgs.msg import Int32
 from sensor_msgs.msg import LaserScan
 from tf2_ros import TransformListener, Buffer # เพิ่ม TF
 import yaml # เพิ่มสำหรับ Save YAML
+
+# Threshold AMCL covariance (diagonal) ที่ถือว่า converged แล้ว
+# ค่า x,y เป็น m^2 (std ≈ sqrt) ; yaw เป็น rad^2
+AMCL_COV_XY_MAX = 0.05    # std ≈ 0.22 m
+AMCL_COV_YAW_MAX = 0.07   # std ≈ 0.26 rad ≈ 15°
+WARMUP_SEC = 1.5          # หยุดนิ่งก่อนอ่าน TF
 
 msg = """
 Control Your Yahboom Robot & Servo!
@@ -24,7 +30,20 @@ e/c : increase/decrease only angular speed by 10%
 
 Special Actions:
     p : Run Servo Sequence (Step -40 then 0)
-    s : SAVE Current Pose as Waypoint (to nav_waypoints.yaml)
+    s : SAVE Current Pose as Waypoint (no type)
+    1 : SAVE as waypoint type=person   (flush via buffer)
+    2 : SAVE as waypoint type=tag      (flush via buffer)
+    0 : SAVE as HOME (task=HOME, no type)
+    v : Buffer current pose as VIA point (ผูกเข้า waypoint ถัดไป)
+    b : Clear via buffer
+    f : Force-save (bypass AMCL covariance check)
+    a : Print AMCL status
+
+** BEFORE RECORDING **
+  1) วางหุ่นที่ origin หันหน้า +x ก่อน launch nav2
+  2) ขับวน arena 1 รอบให้ AMCL converge
+  3) ทุกครั้งก่อนกด save ต้อง "หยุดนิ่ง" 1-2 วินาที (ระบบจะ warmup ให้)
+  4) ถ้าเห็น "AMCL NOT CONVERGED" → อย่า save ขับวนต่อแล้ว 'a' เช็ค
 
 CTRL-C to quit
 """
@@ -46,7 +65,15 @@ class Yahboom_Keyboard(Node):
         self.pub = self.create_publisher(Twist, 'cmd_vel', 10)
         self.pub_servo = self.create_publisher(Int32, 'servo_s1', 10)
         self.sub_scan = self.create_subscription(LaserScan, '/scan', self.scan_callback, 10)
-        
+        self.sub_amcl = self.create_subscription(
+            PoseWithCovarianceStamped, '/amcl_pose', self.amcl_callback, 10)
+
+        # AMCL state
+        self.amcl_cov_xx = None
+        self.amcl_cov_yy = None
+        self.amcl_cov_yaw = None
+        self.amcl_last_time = 0.0
+
         # เพิ่ม TF Listener สำหรับหาตำแหน่งหุ่นยนต์
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
@@ -59,6 +86,7 @@ class Yahboom_Keyboard(Node):
         self.settings = termios.tcgetattr(sys.stdin)
         self.servo_busy = False
         self.waypoints = [] # เก็บ Waypoints
+        self.via_buffer = [] # buffer ของ via points รอผูกเข้า waypoint ถัดไป
         
         self.dist_front = 10.0
         self.dist_back  = 10.0
@@ -66,6 +94,40 @@ class Yahboom_Keyboard(Node):
         self.dist_right = 10.0
         self.safety_limit = 0.3
         self.last_beep_time = 0.0
+
+    def amcl_callback(self, msg):
+        c = msg.pose.covariance  # row-major 6x6
+        self.amcl_cov_xx = c[0]
+        self.amcl_cov_yy = c[7]
+        self.amcl_cov_yaw = c[35]
+        self.amcl_last_time = time.time()
+
+    def amcl_ready(self):
+        """ คืน (ok: bool, reason: str) """
+        if self.amcl_cov_xx is None:
+            return False, "ยังไม่ได้รับ /amcl_pose เลย (Nav2 launch แล้วหรือยัง?)"
+        age = time.time() - self.amcl_last_time
+        if age > 5.0:
+            return False, f"/amcl_pose stale ({age:.1f}s) — AMCL อาจหยุดทำงาน"
+        if self.amcl_cov_xx > AMCL_COV_XY_MAX or self.amcl_cov_yy > AMCL_COV_XY_MAX:
+            return False, (f"NOT CONVERGED: xx={self.amcl_cov_xx:.3f} yy={self.amcl_cov_yy:.3f} "
+                          f"(max {AMCL_COV_XY_MAX}) → ขับวนต่อให้ AMCL converge")
+        if self.amcl_cov_yaw > AMCL_COV_YAW_MAX:
+            return False, (f"yaw NOT CONVERGED: yaw_cov={self.amcl_cov_yaw:.3f} "
+                          f"(max {AMCL_COV_YAW_MAX}) → หมุนกลับไปกลับมาช่วย converge")
+        return True, "OK"
+
+    def print_amcl_status(self):
+        if self.amcl_cov_xx is None:
+            print("\n[AMCL] no /amcl_pose received")
+            return
+        ok, reason = self.amcl_ready()
+        tag = "READY" if ok else "BAD"
+        import math
+        sx = math.sqrt(max(self.amcl_cov_xx, 0))
+        sy = math.sqrt(max(self.amcl_cov_yy, 0))
+        sth = math.sqrt(max(self.amcl_cov_yaw, 0))
+        print(f"\n[AMCL {tag}] std σx={sx:.3f}m σy={sy:.3f}m σθ={math.degrees(sth):.1f}° — {reason}")
 
     def scan_callback(self, msg):
         num_points = len(msg.ranges)
@@ -83,37 +145,98 @@ class Yahboom_Keyboard(Node):
         self.dist_back  = get_min_dist(b_idx)
         self.dist_right = get_min_dist(r_idx)
 
-    def save_waypoint(self):
-        """ ฟังก์ชันดึงตำแหน่งปัจจุบันจาก TF และบันทึกลง YAML """
+    def save_waypoint(self, wp_type=None, is_home=False, force=False):
+        """ ดึงตำแหน่งปัจจุบันจาก TF แล้วบันทึกลง YAML
+            wp_type: 'person' | 'tag' | None
+            is_home: True = task='HOME' (ไม่ใส่ type ไม่นับเลข)
+            force: True = ข้าม AMCL covariance check
+        """
+        if not force:
+            ok, reason = self.amcl_ready()
+            if not ok:
+                print(f"\n[REJECT save] {reason}")
+                print("  → ขับวนต่อจนกว่า cov ลง หรือกด 'f' เพื่อ force save")
+                return
+        # หยุดนิ่งและ warmup ให้ AMCL settle ก่อนอ่าน TF
+        print(f"\n[warmup] หยุดนิ่ง {WARMUP_SEC:.1f}s ให้ AMCL settle...", end='', flush=True)
+        self.pub.publish(Twist())  # zero cmd_vel
+        t0 = time.time()
+        while time.time() - t0 < WARMUP_SEC:
+            rclpy.spin_once(self, timeout_sec=0.05)
+        print(" done")
         try:
-            # ดึง Transform ล่าสุดจาก map ไป base_link
             now = rclpy.time.Time()
-            trans = self.tf_buffer.lookup_transform('map', 'base_link', now, 
+            trans = self.tf_buffer.lookup_transform('map', 'base_link', now,
                                                     timeout=rclpy.duration.Duration(seconds=0.2))
-            
+
             pos = trans.transform.translation
             ori = trans.transform.rotation
-            
-            w_idx = len(self.waypoints) + 1
-            wp_data = {
-                'task': f'waypoint_{w_idx}',
+
+            if is_home:
+                wp_data = {'task': 'HOME'}
+            else:
+                w_idx = sum(1 for w in self.waypoints if w.get('task', '').startswith('waypoint_')) + 1
+                wp_data = {'task': f'waypoint_{w_idx}'}
+                if wp_type:
+                    wp_data['type'] = wp_type
+
+            wp_data['x'] = round(pos.x, 3)
+            wp_data['y'] = round(pos.y, 3)
+            wp_data['orientation'] = {
+                'z': round(ori.z, 5),
+                'w': round(ori.w, 5),
+            }
+
+            # ถ้าเป็น waypoint หลัก (ไม่ใช่ HOME) และมี via ค้างใน buffer → ผูกเข้า
+            if not is_home and self.via_buffer:
+                wp_data['via'] = self.via_buffer
+                via_n = len(self.via_buffer)
+                self.via_buffer = []
+            else:
+                via_n = 0
+
+            self.waypoints.append(wp_data)
+
+            with open('nav_waypoints.yaml', 'w') as f:
+                yaml.dump({'waypoints': self.waypoints}, f, sort_keys=False)
+
+            tag = 'HOME' if is_home else wp_data.get('type', '-')
+            via_msg = f" +via×{via_n}" if via_n else ""
+            print(f"\n[SAVED] {wp_data['task']} ({tag}) at x:{wp_data['x']}, y:{wp_data['y']}{via_msg}")
+
+        except Exception as e:
+            print(f"\n[ERROR] Could not save waypoint: {e}")
+
+    def buffer_via(self, force=False):
+        """ เก็บตำแหน่งปัจจุบันเข้า via buffer (ยังไม่เขียนไฟล์) """
+        if not force:
+            ok, reason = self.amcl_ready()
+            if not ok:
+                print(f"\n[REJECT via] {reason}")
+                return
+        try:
+            now = rclpy.time.Time()
+            trans = self.tf_buffer.lookup_transform('map', 'base_link', now,
+                                                    timeout=rclpy.duration.Duration(seconds=0.2))
+            pos = trans.transform.translation
+            ori = trans.transform.rotation
+            via = {
                 'x': round(pos.x, 3),
                 'y': round(pos.y, 3),
                 'orientation': {
                     'z': round(ori.z, 5),
-                    'w': round(ori.w, 5)
+                    'w': round(ori.w, 5),
                 }
             }
-            
-            self.waypoints.append(wp_data)
-            
-            with open('nav_waypoints.yaml', 'w') as f:
-                yaml.dump({'waypoints': self.waypoints}, f, sort_keys=False)
-            
-            print(f"\n[SAVED] {wp_data['task']} at x:{wp_data['x']}, y:{wp_data['y']}")
-            
+            self.via_buffer.append(via)
+            print(f"\n[VIA] buffered #{len(self.via_buffer)} at x:{via['x']}, y:{via['y']}")
         except Exception as e:
-            print(f"\n[ERROR] Could not save waypoint: {e}")
+            print(f"\n[ERROR] Could not buffer via: {e}")
+
+    def clear_via(self):
+        n = len(self.via_buffer)
+        self.via_buffer = []
+        print(f"\n[VIA] cleared {n} buffered point(s)")
 
     def play_warning_sound(self):
         current_time = time.time()
@@ -166,8 +289,22 @@ def main():
                 if not node.servo_busy:
                     threading.Thread(target=node.run_servo_sequence).start()
             
-            elif key == 's': # กด s เพื่อเซฟตำแหน่ง
+            elif key == 's': # กด s เพื่อเซฟตำแหน่ง (ไม่มี type)
                 node.save_waypoint()
+            elif key == '1': # save type=person
+                node.save_waypoint(wp_type='person')
+            elif key == '2': # save type=tag
+                node.save_waypoint(wp_type='tag')
+            elif key == '0': # save HOME
+                node.save_waypoint(is_home=True)
+            elif key == 'v': # buffer via point
+                node.buffer_via()
+            elif key == 'b': # clear via buffer
+                node.clear_via()
+            elif key == 'a': # AMCL status
+                node.print_amcl_status()
+            elif key == 'f': # force-save แบบไม่ระบุ type (ข้าม AMCL check)
+                node.save_waypoint(force=True)
 
             # --- Logic การเคลื่อนที่ ---
             if key in moveBindings.keys():
