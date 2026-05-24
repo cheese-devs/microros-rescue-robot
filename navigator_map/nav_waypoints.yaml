@@ -1,15 +1,53 @@
 waypoints:
 - task: waypoint_1
   type: person
-  x: 0.715
-  y: -0.408
+  x: 0.687
+  y: -0.307
   orientation:
-    z: -0.75902
-    w: 0.65107
+    z: -0.74625
+    w: 0.66566
 - task: waypoint_2
   type: tag
-  x: 1.599
-  y: -0.502
+  x: 1.615
+  y: -0.51
   orientation:
-    z: -0.03076
-    w: 0.99953
+    z: -0.0467
+    w: 0.99891
+- task: waypoint_3
+  type: tag
+  x: 2.538
+  y: -1.416
+  orientation:
+    z: 0.96993
+    w: 0.24337
+  via:
+  - x: 2.477
+    y: 0.07
+    orientation:
+      z: -0.34123
+      w: 0.93998
+- task: waypoint_4
+  type: person
+  x: 0.685
+  y: -1.776
+  orientation:
+    z: 0.5531
+    w: 0.83311
+  via:
+  - x: 2.672
+    y: -2.06
+    orientation:
+      z: 0.9357
+      w: -0.35279
+- task: HOME
+  x: 0.06
+  y: 0.017
+  orientation:
+    z: -0.00603
+    w: 0.99998
+  via:
+  - x: 0.143
+    y: -2.051
+    orientation:
+      z: 0.74039
+      w: 0.67218

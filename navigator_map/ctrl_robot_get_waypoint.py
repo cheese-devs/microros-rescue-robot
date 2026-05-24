@@ -4,6 +4,7 @@
 import sys, select, termios, tty, time, threading
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSDurabilityPolicy, QoSHistoryPolicy
 from geometry_msgs.msg import Twist, PoseWithCovarianceStamped
 from std_msgs.msg import Int32
 from sensor_msgs.msg import LaserScan
@@ -35,6 +36,7 @@ Special Actions:
     2 : SAVE as waypoint type=tag      (flush via buffer)
     0 : SAVE as HOME (task=HOME, no type)
     v : Buffer current pose as VIA point (ผูกเข้า waypoint ถัดไป)
+    h : Attach buffered VIA to existing HOME in yaml (ไม่ทับ waypoint อื่น)
     b : Clear via buffer
     f : Force-save (bypass AMCL covariance check)
     a : Print AMCL status
@@ -65,8 +67,15 @@ class Yahboom_Keyboard(Node):
         self.pub = self.create_publisher(Twist, 'cmd_vel', 10)
         self.pub_servo = self.create_publisher(Int32, 'servo_s1', 10)
         self.sub_scan = self.create_subscription(LaserScan, '/scan', self.scan_callback, 10)
+        # AMCL publishes /amcl_pose ด้วย TRANSIENT_LOCAL — ต้อง match ไม่งั้นพลาด latched msg แรก
+        amcl_qos = QoSProfile(
+            reliability=QoSReliabilityPolicy.RELIABLE,
+            durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
+            history=QoSHistoryPolicy.KEEP_LAST,
+            depth=1,
+        )
         self.sub_amcl = self.create_subscription(
-            PoseWithCovarianceStamped, '/amcl_pose', self.amcl_callback, 10)
+            PoseWithCovarianceStamped, '/amcl_pose', self.amcl_callback, amcl_qos)
 
         # AMCL state
         self.amcl_cov_xx = None
@@ -187,8 +196,8 @@ class Yahboom_Keyboard(Node):
                 'w': round(ori.w, 5),
             }
 
-            # ถ้าเป็น waypoint หลัก (ไม่ใช่ HOME) และมี via ค้างใน buffer → ผูกเข้า
-            if not is_home and self.via_buffer:
+            # ผูก via ที่ buffered ไว้เข้ากับ waypoint ที่กำลังเซฟ — รวมถึง HOME
+            if self.via_buffer:
                 wp_data['via'] = self.via_buffer
                 via_n = len(self.via_buffer)
                 self.via_buffer = []
@@ -237,6 +246,41 @@ class Yahboom_Keyboard(Node):
         n = len(self.via_buffer)
         self.via_buffer = []
         print(f"\n[VIA] cleared {n} buffered point(s)")
+
+    def attach_via_to_home(self):
+        """ ผูก via_buffer เข้ากับ entry HOME ใน yaml ที่มีอยู่แล้ว
+            โหลด → แก้เฉพาะ HOME → save กลับ — waypoint อื่นไม่กระทบ
+        """
+        if not self.via_buffer:
+            print("\n[REJECT attach] via buffer ว่าง — กด 'v' บัฟเฟอร์จุดก่อน")
+            return
+        try:
+            with open('nav_waypoints.yaml', 'r') as f:
+                data = yaml.safe_load(f) or {}
+        except FileNotFoundError:
+            print("\n[ERROR] ไม่พบ nav_waypoints.yaml — ต้องมี HOME ในไฟล์อยู่ก่อน")
+            return
+        except Exception as e:
+            print(f"\n[ERROR] โหลด yaml ไม่ได้: {e}")
+            return
+
+        wps = data.get('waypoints', [])
+        home = next((w for w in wps if w.get('task', '').upper() == 'HOME'), None)
+        if home is None:
+            print("\n[ERROR] ไม่เจอ entry task=HOME ใน yaml — เซฟ HOME ก่อน ('0')")
+            return
+
+        home['via'] = self.via_buffer
+        n = len(self.via_buffer)
+        try:
+            with open('nav_waypoints.yaml', 'w') as f:
+                yaml.dump({'waypoints': wps}, f, sort_keys=False)
+        except Exception as e:
+            print(f"\n[ERROR] เขียน yaml ไม่ได้: {e}")
+            return
+
+        self.via_buffer = []
+        print(f"\n[ATTACH] ผูก via×{n} เข้ากับ HOME แล้ว — waypoint อื่นคงเดิม")
 
     def play_warning_sound(self):
         current_time = time.time()
@@ -301,6 +345,8 @@ def main():
                 node.buffer_via()
             elif key == 'b': # clear via buffer
                 node.clear_via()
+            elif key == 'h': # attach buffered via to existing HOME (โหลด→แก้→เซฟ)
+                node.attach_via_to_home()
             elif key == 'a': # AMCL status
                 node.print_amcl_status()
             elif key == 'f': # force-save แบบไม่ระบุ type (ข้าม AMCL check)

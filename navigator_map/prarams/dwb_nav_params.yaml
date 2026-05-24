@@ -146,11 +146,13 @@ controller_server:
     #  xy_goal_tolerance: 0.25
     #  yaw_goal_tolerance: 0.25
     #  stateful: True
+    # ระยะที่ถือว่า "ถึง goal" — บีบลงเล็กลง = ตรงจุดมากขึ้น แต่อาจวนแก้ตัวไม่หยุด
+    # ถ้าจะปรับ ต้องแก้ FollowPath.xy_goal_tolerance ด้านล่างให้เท่ากันด้วย
     general_goal_checker:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.25
-      yaw_goal_tolerance: 0.25
+      xy_goal_tolerance: 0.15
+      yaw_goal_tolerance: 0.15
     # DWB parameters
     FollowPath:
       plugin: "dwb_core::DWBLocalPlanner"
@@ -178,7 +180,7 @@ controller_server:
       linear_granularity: 0.05
       angular_granularity: 0.025
       transform_tolerance: 0.2
-      xy_goal_tolerance: 0.25
+      xy_goal_tolerance: 0.15
       trans_stopped_velocity: 0.15
       short_circuit_trajectory_evaluation: True
       stateful: True
@@ -206,6 +208,9 @@ local_costmap:
       width: 3
       height: 3
       resolution: 0.05
+      # ทน TF lag (EKF เคยขึ้น "Failed to meet update rate 0.288s") — กัน scan ถูก drop
+      # เป็น "ผีกำแพง" เพราะ raytrace clearing ไม่เกิด ค่า default 0.3s ไม่พอ
+      transform_tolerance: 1.0
       # หุ่นจริง 0.20 x 0.16 m — ใช้ polygon แทนวงกลม robot_radius 0.14
       # วงกลมมองหุ่นเป็น Ø0.28 → กินช่องคอก 0.6 m จน DWB ถอยออกไม่ได้
       # polygon ทำให้ inscribed หดเหลือ ~0.08 + เช็ค footprint ตามมุมจริง
@@ -214,8 +219,10 @@ local_costmap:
       plugins: ["voxel_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 10.0
-        inflation_radius: 0.18
+        # cost_scaling 10 ชันมาก + inflation 0.18 → halo รอบกำแพงปิดทางออก DWB
+        # ลด 10→3 (decay เร็วขึ้น) + 0.18→0.10 (ใกล้ inscribed 0.08) ให้ DWB หา trajectory ได้
+        cost_scaling_factor: 3.0
+        inflation_radius: 0.10
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: True
