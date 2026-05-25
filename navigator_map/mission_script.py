@@ -138,12 +138,14 @@ class MissionScanner(Node):
         # ตั้งใจฟาด 2 ครั้ง = ปล่อย 2 กล่องต่อ waypoint เป็น safety margin
         # เผื่อกล่องใบแรกตกพลาดจุด ใบที่ 2 ตามไปเพิ่มโอกาส
         # เผื่อ margin 1° กัน mechanical stop ของ MG90S (limit ±90° เฟืองโลหะแตกง่ายถ้าชน stop)
-        # 178° swing (-89↔+89) ใช้ 0.4s — MG90S no-load ใช้ 0.3s แต่ติดโหลด+DDS+S-curve เผื่อ
+        # 178° swing (-89↔+89) ขยาย 0.4 → 0.6s ให้ servo มีเวลาสวิงเต็ม ramp
         # 89° swing (0→+89, -89→0) ใช้ 0.3s พอ
-        self._hold_servo(+89, 0.3)   # pre-load (0 → +89 = 89°)
-        self._hold_servo(-89, 0.4)   # strike 1 (178°) — ปล่อยกล่องใบ 1
-        self._hold_servo(+89, 0.4)   # ยกกลับ (178°)
-        self._hold_servo(-89, 0.4)   # strike 2 (178°) — ปล่อยกล่องใบ 2
+        # pre-load ขยาย 0.3 → 0.7s ให้ spring/เฟือง load เต็มก่อน strike 1
+        # (data 5 รอบ: ลูกแรกมัก fail / ไกลน้อยกว่าลูก 2 → strike 1 momentum ต่ำเพราะ pre-load สั้นไป)
+        self._hold_servo(+89, 0.7)   # pre-load (0 → +89 = 89°) — ขยายเพื่อ load เฟืองเต็ม
+        self._hold_servo(-89, 0.6)   # strike 1 (178°) — ปล่อยกล่องใบ 1
+        self._hold_servo(+89, 0.6)   # ยกกลับ (178°)
+        self._hold_servo(-89, 0.6)   # strike 2 (356° รวม windup) — ปล่อยกล่องใบ 2
         self._hold_servo(0,   0.3)   # คืนตำแหน่ง (89°)
 
     def _hold_servo(self, angle, duration):

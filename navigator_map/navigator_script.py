@@ -16,7 +16,7 @@ MAX_NAV_RETRY    = 1     # ลองซ้ำเมื่อ FAILED กี่ค
 # วิธีกัน: ถอยออกจากซอกด้วย Nav2 BackUp behavior (collision-aware) ก่อนสั่ง goToPose จุดถัดไป
 # 0.20m พอตรงทฤษฎี แต่จริงไม่พ้นซอก U → 0.30m พอออกแต่ไม่ชนกำแพงหลัง (หลังขยับ WP เข้า 5cm)
 # เคยใช้ 0.50m แต่ชนกำแพงด้านหลังของซอกหลังขยับ WP1/WP4 เข้า 5cm → BackUp FAILED → ติดในซอก
-POCKET_BACKUP_DIST_M       = 0.30
+POCKET_BACKUP_DIST_M       = 0.60
 POCKET_BACKUP_SPEED_MPS    = 0.05
 POCKET_BACKUP_TIMEOUT_SEC  = 8
 
