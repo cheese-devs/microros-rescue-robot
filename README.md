@@ -15,6 +15,11 @@
 > **Team PSPray** · Prajaksilapakarn School / ทีม PSPray · โรงเรียนประจักษ์ศิลปาคาร
 > Passed every round · vision recognition **100% accuracy** · zero navigation failures · clean servo dispensing.
 
+<p align="center">
+  <img src="navigator_map/docs/photos/award_runnerup.jpg" width="70%" alt="Team PSPray receiving the 1st Runner-up trophy and award for Robo Rescue with micro-ROS">
+  <br><i>Team PSPray with the 1st Runner-up trophy — Robo Rescue with micro-ROS, Diamond Hall<br>ทีม PSPray รับถ้วยรองชนะเลิศอันดับ 1 — Robo Rescue with micro-ROS</i>
+</p>
+
 ---
 
 ## 👤 My Role / บทบาท
@@ -22,6 +27,11 @@
 **Sole software developer** — I designed and wrote the entire autonomy stack myself: SLAM mapping, Nav2 navigation tuning, the computer-vision node, the mission state machine, the servo dispenser logic, and all bring-up/diagnostic tooling.
 
 ผมเป็น **ผู้พัฒนาซอฟต์แวร์หลักเพียงคนเดียว** — ออกแบบและเขียนระบบอัตโนมัติทั้งหมดด้วยตัวเอง ตั้งแต่ระบบสร้างแผนที่ (SLAM), การจูน Nav2, โหนด computer vision, state machine ของภารกิจ, ตรรกะ servo ปล่อยกล่อง ไปจนถึงเครื่องมือ bring-up/diagnostic ทุกตัว
+
+<p align="center">
+  <img src="navigator_map/docs/photos/team_pit_debug.jpg" width="42%" alt="Team debugging the robot and code at the competition pit">
+  <br><i>Final tuning at the pit — micro-ROS-X robot + live debugging on race day<br>จูนระบบหน้างานที่พิต — ดีบักโค้ดสดวันแข่ง</i>
+</p>
 
 ---
 
