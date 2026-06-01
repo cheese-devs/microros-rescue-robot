@@ -112,8 +112,16 @@ cd ../slam_map
 ./slam_map.sh                  # slam_toolbox + RViz, drive to build the map
 ./save_map.sh && cp my_robot_map.* ../navigator_map/
 
-# Phase 3 — autonomous mission
+# Phase 3 — navigation
 cd ../navigator_map
+
+#  (3a) define the mission waypoints  →  writes nav_waypoints.yaml
+python3 pick_waypoints.py      # click target points on the map (Tkinter)
+#   or drive the robot and capture live TF poses:  python3 get_waypoint.py
+python3 gen_via.py             # optional: insert "via" points for tight turns
+python3 draw_waypoints.py      # preview the waypoints overlaid on the map
+
+#  (3b) run the autonomous mission
 ./run_all_mission.sh           # Nav2 + vision node + mission controller
 ```
 
