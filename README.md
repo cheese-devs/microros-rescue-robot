@@ -115,7 +115,7 @@ Most teams record waypoints by physically driving the robot to each spot and cap
 cd start_up_robot
 ./start_agent_computer.sh      # micro-ROS agent for robot base (port 8090)
 ./start_Camera_computer.sh     # micro-ROS agent for ESP32 cam (port 9999)
-python3 config_robot_<wifi>.py # one-time: set SSID / agent IP / domain id over USB
+python3 config_robot_RRR26.py  # edit SSID / agent IP / domain id placeholders, then flash over USB
 
 # Phase 2 — SLAM mapping
 cd ../slam_map
