@@ -8,7 +8,7 @@
 
 | ด้าน | ผลวันแข่ง |
 |---|---|
-| Vision (AprilTag) | อ่าน ID ได้ **โหวต 100% ทุกครั้ง** — 115 (6/6, 9/9), 112 (17/17), 109 (11/11 ×2 รอบ) |
+| Vision (AprilTag) | อ่าน ID ได้ **โหวต 100% ทุกครั้ง** — 115 (6/6, 9/9), 112 (17/17) |
 | ตัดสิน tag | จบใน WARMUP 2.5s ทุกครั้ง — **spin fallback ไม่เคยถูกเรียกใช้จริง** |
 | Servo (person) | `ปล่อยทันที (ข้าม detection)` ทำงานครบทุกจุด จบ ~2.8-5.7s/จุด ไม่พลาด |
 | Navigation | ไม่มี FAILED/ERROR/recovery loop; BackUp 0.6m จุดติดทุก approach แล้วไปต่อได้ |
@@ -33,7 +33,7 @@
 - [ ] วางหุ่นจุดสตาร์ทเป๊ะ yaw=0 หันหน้า +x — AMCL `set_initial_pose` seed (0,0,0) ถ้าวางเพี้ยนจะ relocalize ผิดพ็อกเก็ต
 - [ ] เทียบ md5 `my_robot_map.{pgm,yaml}` ระหว่าง `slam_map/` ↔ `navigator_map/` — map ค้างทำให้ mislocalize แม้ initial_pose ถูก
 - [ ] เช็กแบต ≥ ~8.0V — ต่ำกว่านี้ IMU เอ๋อ หุ่นหมุนเองใน RViz (เช็ก voltage ก่อน debug localization)
-- [ ] WiFi สนามคนละวง → reflash `config_robot_<wifi>.py` (ทั้ง base :8090 และกล้อง :9999) + power-cycle, ROS_DOMAIN_ID ตรงกัน
+- [ ] WiFi สนามคนละวง → reflash `config_robot_RRR26.py` (ทั้ง base :8090 และกล้อง :9999) + power-cycle, ROS_DOMAIN_ID ตรงกัน
 - [ ] อัปเดต `nav_waypoints.yaml` ตามตำแหน่งผู้ประสบภัย/tag ที่ประกาศหน้างาน (แก้ระหว่างรันได้ — reload ทุก prompt loop)
 - [ ] ปิด RViz วันแข่ง (`OPEN_RVIZ=false`) ลด CPU; ใช้ `watch_pose.py` มอนิเตอร์แบบ headless แทน
 

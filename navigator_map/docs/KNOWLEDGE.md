@@ -73,7 +73,7 @@
 
 ## 5. การตั้งค่าหุ่นยนต์ (Robot Config)
 
-ตั้งค่าผ่าน **USB Serial** ก่อนใช้งานครั้งแรก (สคริปต์ `start_up_robot/config_robot.py`)
+ตั้งค่าผ่าน **USB Serial** ก่อนใช้งานครั้งแรก (สคริปต์ `start_up_robot/config_robot_RRR26.py`)
 
 - **Port:** `/dev/ttyUSB0`
 - **Baudrate:** 115200
@@ -145,7 +145,7 @@ docker run -it --rm --name uros_agent_9999 \
 ```
 
 ไฟล์สำคัญ:
-- `config_robot.py` — class `MicroROS_Robot` ตั้งค่าผ่าน serial
+- `config_robot_RRR26.py` — class `MicroROS_Robot` ตั้งค่าผ่าน serial
 - `ctrl_robot.py` — keyboard teleop + LiDAR safety stop (30 cm) + servo control (`p`)
 - `Cam_Pose_AprilTag.py` — MediaPipe pose + AprilTag detection + dashboard
 - `watchdog.py` — แสดงสถานะ camera/IMU/battery real-time
