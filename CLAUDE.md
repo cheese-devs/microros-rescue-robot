@@ -72,4 +72,4 @@ For Nav2-specific architecture (waypoint flow, mission_script gating, Nav2 param
 
 ## Memory & competition context
 
-There is an extensive auto-memory store under `~/.claude/projects/-home-pray-microROS-X-Example/memory/` (indexed by `MEMORY.md`, mirrored read-only in `memory_export/`). It holds: RRR26 rules summary, arena/survivor-zone layout, servo dispenser strategy, navigation debugging history, and per-incident feedback notes. Consult it for race-day rules, scoring, or past run failures before re-deriving from PDF or git log.
+There is an extensive auto-memory store under `~/.claude/projects/-home-pray-microROS-X-Example/memory/` (indexed by `MEMORY.md`). It holds: RRR26 rules summary, arena/survivor-zone layout, servo dispenser strategy, navigation debugging history, and per-incident feedback notes. Consult it for race-day rules, scoring, or past run failures before re-deriving from PDF or git log.

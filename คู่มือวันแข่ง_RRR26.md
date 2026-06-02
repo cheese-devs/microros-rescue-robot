@@ -292,8 +292,7 @@ bash diag.sh 2>&1 | tee diag_out.txt
 # 📞 ติดต่อทีม / debug
 
 - log ของแต่ละ phase อยู่ที่ `/tmp/nav2.log`, `/tmp/vision.log`, `/tmp/navigator.log`
-- กติกาเต็ม: `navigator_map/docs/RRR26.pdf`
-- ภาพสนาม + zone ผู้ประสบภัย: `memory_export/project_arena_survivor_zone.md`
+- กติกาเต็ม + ภาพสนาม/zone ผู้ประสบภัย: `navigator_map/docs/RRR26.pdf`
 - คู่มือ Yahboom hardware: `yahboom_microros_robot_manual.md`
 
 ---
