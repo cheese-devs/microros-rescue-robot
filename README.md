@@ -60,7 +60,7 @@
 
 Pulled from the actual race-day ROS logs / ดึงจาก log จริงวันแข่ง:
 
-- **Vision:** AprilTag IDs 115, 112, 109 detected with a **perfect vote** every time (e.g. 17/17 frames). The spin-to-search fallback I built was **never even needed**.
+- **Vision:** AprilTag IDs 115, 112 detected with a **perfect vote** every time (e.g. 17/17 frames). The spin-to-search fallback I built was **never even needed**.
 - **Servo dispenser:** Aid boxes released cleanly at every survivor point, **2.8–5.7 s** per drop, zero misfires.
 - **Navigation:** **No FAILED states, errors, or recovery loops** across the mission logs. Collision-aware back-up recovery triggered as designed at every approach and the robot continued every time.
 
