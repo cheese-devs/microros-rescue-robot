@@ -33,9 +33,9 @@
 
 ## 👤 My Role / บทบาท
 
-**Sole software developer** — I designed and wrote the entire autonomy stack myself: SLAM mapping, Nav2 navigation tuning, the computer-vision node, the mission state machine, the servo dispenser logic, and all bring-up/diagnostic tooling.
+**Sole software developer on the team.** Starting from [inex's micro-ROS example project](https://github.com/inexglobal/microROS-X_Example) (the base bring-up, teleop, and launch scaffolding), I did the engineering that made it race-ready: tuned the Nav2 navigation + costmaps for the tight survivor pockets, substantially extended the mission state machine and servo-dispenser logic, adapted the AprilTag vision node for reliable confirmation, and wrote my own tooling from scratch — most notably the click-on-map waypoint editor the judges praised.
 
-ผมเป็น **ผู้พัฒนาซอฟต์แวร์เพียงคนเดียวของทีม** — ออกแบบและเขียนระบบอัตโนมัติทั้งหมดด้วยตัวเอง ตั้งแต่ระบบสร้างแผนที่ (SLAM), การจูน Nav2, โหนด computer vision, state machine ของภารกิจ, ตรรกะ servo ปล่อยกล่อง ไปจนถึงเครื่องมือ bring-up/diagnostic ทุกตัว
+ผมเป็น **ผู้พัฒนาซอฟต์แวร์เพียงคนเดียวของทีม** — เริ่มจาก[โปรเจกต์ตัวอย่าง micro-ROS ของ inex](https://github.com/inexglobal/microROS-X_Example) (โครง bring-up, teleop, launch พื้นฐาน) แล้วทำส่วนที่ทำให้มันแข่งได้จริง: จูน Nav2 + costmap สำหรับ survivor pocket แคบ ๆ, ต่อยอด state machine ภารกิจและตรรกะ servo ปล่อยกล่องอย่างหนัก, ดัดแปลงโหนด vision AprilTag ให้ยืนยันแม่นยำ และเขียนเครื่องมือของตัวเองขึ้นใหม่ทั้งหมด — โดยเฉพาะ waypoint editor แบบคลิกบนแผนที่ที่กรรมการชม
 
 <p align="center">
   <img src="navigator_map/docs/photos/team_pit_debug.jpg" width="42%" alt="Team debugging the robot and code at the competition pit">
@@ -46,13 +46,13 @@
 
 ## 🧠 Technical Highlights / จุดเด่นเชิงเทคนิค
 
-| Area | What I built |
+| Area | What I did |
 |---|---|
-| **Autonomous Navigation** | Nav2 stack on a custom SLAM map (slam_toolbox), AMCL localization, DWB controller, tuned costmaps + recovery behaviors for tight U-shaped "survivor pockets" |
-| **Computer Vision** | Real-time AprilTag (tag36h11) detection node on an ESP32 camera stream, with a vote-based warm-up gate that confirmed survivor IDs in **2.5 s, 100% of the time** |
-| **Distributed Systems** | Robot runs **micro-ROS (DDS-XRCE) over Wi-Fi UDP**, bridged into the ROS 2 graph via a Dockerized agent — the robot itself never runs ROS 2 |
-| **Mission Control** | Interactive waypoint mission engine with software watchdog, timeout-based recovery, and a 2-strike servo dispenser for delivering aid boxes |
-| **Engineering Rigor** | Log-driven verification, fallback strategies for every failure mode, per-Wi-Fi reconfiguration tooling, full post-mortem documentation |
+| **Autonomous Navigation** | Tuned the Nav2 stack on my own SLAM map (slam_toolbox) — AMCL localization, DWB/RPP controller params, costmaps + recovery behaviors for the tight U-shaped "survivor pockets" |
+| **Computer Vision** | Reworked the AprilTag (tag36h11) detection node on the ESP32 camera stream and added a vote-based warm-up gate that confirmed survivor IDs in **2.5 s, 100% of the time** |
+| **Distributed Systems** | Configured and operated the robot's **micro-ROS (DDS-XRCE) over Wi-Fi UDP** link (per-venue Wi-Fi reconfig) bridged into ROS 2 via a Dockerized agent — the architecture from inex's example, which I set up and ran reliably on race day |
+| **Mission Control** | Extended the waypoint mission engine — software watchdog, timeout-based cancel/retry recovery, and a 2-strike servo dispenser for delivering aid boxes |
+| **Engineering Rigor** | Log-driven verification, fallback strategies for every failure mode, per-Wi-Fi reconfiguration, full post-mortem documentation, and original waypoint/diagnostic tooling |
 
 ---
 
@@ -139,20 +139,21 @@ python3 draw_waypoints.py      # preview the waypoints overlaid on the map
 
 ---
 
-## 💻 Key source files / โค้ดที่เขียนเอง
+## 💻 Key source files / โค้ดหลัก
 
-The core of the autonomy stack — all written by me. Click to read:
+The parts of the autonomy stack I wrote or substantially reworked, built on inex's micro-ROS example. The **Origin** column is honest about what's new vs. extended — click to read:
 
-| File | What it does | LOC |
+| File | What it does | Origin |
 |---|---|---|
-| [`navigator_map/navigator_script.py`](navigator_map/navigator_script.py) | Mission controller — drives the waypoint sequence, software watchdog, timeout/cancel-retry recovery, emergency stop | 403 |
-| [`navigator_map/mission_script.py`](navigator_map/mission_script.py) | Per-waypoint logic — vote-based AprilTag confirmation + 2-strike servo dispenser gating | 226 |
-| [`navigator_map/Cam_Pose_AprilTag.py`](navigator_map/Cam_Pose_AprilTag.py) | Vision node — AprilTag (tag36h11) detection on the ESP32 stream, gated by `/vision/detect_enable` | 88 |
-| [`navigator_map/pick_waypoints.py`](navigator_map/pick_waypoints.py) | ⭐ **Judges' favorite** — Tkinter tool: click waypoints + via points on the map → `nav_waypoints.yaml` (see ⭐ highlight in System Overview) | 547 |
-| [`navigator_map/nav2_launch.py`](navigator_map/nav2_launch.py) | Nav2 bring-up — costmaps, AMCL, DWB controller, static TF | 81 |
-| [`start_up_robot/watchdog.py`](start_up_robot/watchdog.py) | Real-time camera / IMU / battery health monitor during bring-up | 119 |
+| [`navigator_map/pick_waypoints.py`](navigator_map/pick_waypoints.py) | ⭐ **Judges' favorite** — Tkinter tool: click waypoints + via points on the map → `nav_waypoints.yaml` (see ⭐ highlight in System Overview) | **Written from scratch** · 547 LOC |
+| [`navigator_map/gen_via.py`](navigator_map/gen_via.py) · [`draw_waypoints.py`](navigator_map/draw_waypoints.py) | `via`-point path shaping for tight turns + waypoint preview overlay | **Written from scratch** |
+| [`navigator_map/navigator_script.py`](navigator_map/navigator_script.py) | Mission controller — drives the waypoint sequence, software watchdog, timeout/cancel-retry recovery, emergency stop | Extended from inex base · **+328 LOC** (now 403) |
+| [`navigator_map/mission_script.py`](navigator_map/mission_script.py) | Per-waypoint logic — vote-based AprilTag confirmation + 2-strike servo dispenser gating | Extended from inex base · **+204 LOC** (now 226) |
+| [`navigator_map/prarams/`](navigator_map/prarams/) `dwb_nav_params.yaml` · `rpp_nav_params.yaml` | Nav2 costmap + DWB/RPP controller tuning for the tight U-shaped pockets | **Tuned by me** |
+| [`navigator_map/Cam_Pose_AprilTag.py`](navigator_map/Cam_Pose_AprilTag.py) | Vision node — AprilTag (tag36h11) detection on the ESP32 stream, gated by `/vision/detect_enable` | Reworked from inex base |
+| [`start_up_robot/watchdog.py`](start_up_robot/watchdog.py) · [`ros2_check.py`](start_up_robot/ros2_check.py) | Real-time camera / IMU / battery health + bring-up diagnostics | `watchdog` extended · `ros2_check` written from scratch |
 
-โค้ดหลักของระบบอัตโนมัติ — เขียนเองทั้งหมด คลิกเข้าไปอ่านได้เลย
+ส่วนของระบบอัตโนมัติที่ผมเขียนเองหรือปรับปรุงครั้งใหญ่ (ต่อยอดจากตัวอย่าง micro-ROS ของ inex) — คอลัมน์ Origin บอกตรง ๆ ว่าอันไหนเขียนใหม่ vs ต่อยอด · คลิกเข้าไปอ่านได้
 
 ---
 
@@ -164,6 +165,18 @@ I documented the full system for reproducibility and handoff — a habit I consi
 - [`navigator_map/docs/KNOWLEDGE.md`](navigator_map/docs/KNOWLEDGE.md) — deep-dive tutorial of the whole pipeline
 - [`navigator_map/docs/RACE_LESSONS_RRR26.md`](navigator_map/docs/RACE_LESSONS_RRR26.md) — race-day post-mortem
 - [`คู่มือวันแข่ง_RRR26.md`](คู่มือวันแข่ง_RRR26.md) · [`yahboom_microros_robot_manual.md`](yahboom_microros_robot_manual.md) — operator manuals
+
+---
+
+## 🙏 Credits / เครดิต
+
+This project is built on the **micro-ROS example by [inex (inexglobal)](https://github.com/inexglobal/microROS-X_Example)**, which provided the working base: robot bring-up, teleop, the micro-ROS agent setup, and the initial Nav2 / SLAM / vision launch files. Some of those files (e.g. the SLAM launch and the Nav2 launch) are used largely as-is — credit to inex.
+
+On top of that base I tuned the navigation, substantially extended the mission and vision logic, and wrote my own tooling from scratch (the click-on-map waypoint editor, via-point generator, and diagnostics) — see the **Origin** column above for what is new vs. extended.
+
+โปรเจกต์นี้ต่อยอดจาก **ตัวอย่าง micro-ROS ของ [inex (inexglobal)](https://github.com/inexglobal/microROS-X_Example)** ซึ่งเป็น base ที่ทำงานได้จริง: การ bring-up หุ่น, teleop, การตั้ง micro-ROS agent และไฟล์ launch เริ่มต้นของ Nav2 / SLAM / vision — บางไฟล์ (เช่น SLAM launch และ Nav2 launch) ใช้แทบจะตามเดิม ขอเครดิตให้ inex
+
+ส่วนที่ผมทำเองบน base นั้นคือ จูนการนำทาง, ต่อยอดตรรกะภารกิจและ vision อย่างหนัก และเขียนเครื่องมือขึ้นใหม่ทั้งหมด (waypoint editor แบบคลิกบนแผนที่, ตัวสร้าง via point, เครื่องมือ diagnostic) — ดูคอลัมน์ Origin ด้านบนว่าอันไหนเขียนใหม่ vs ต่อยอด
 
 ---
 
