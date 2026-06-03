@@ -168,6 +168,18 @@ I documented the full system for reproducibility and handoff — a habit I consi
 
 ---
 
+## 🤖 AI in My Workflow / AI ในกระบวนการทำงาน
+
+AI is part of how I build, and I use it well. I worked hand-in-hand with **Claude Code** (Anthropic's terminal coding agent) across this whole project — feeding it real race-day ROS logs to hunt down localization drift and Nav2 recovery loops, driving it through reviews and refactors that left the mission state machine noticeably cleaner, and writing the bilingual docs and `CLAUDE.md` knowledge files with it at my side.
+
+The edge was never just *having* the tool — plenty of people have it. It's knowing how to get real work out of one: the right context in, a sharp eye on what comes back, and the judgment to keep pushing until the output is genuinely good. That fluency made me faster and the codebase tighter, and it's exactly the kind of leverage I'll bring to whatever I build next.
+
+AI เป็นส่วนหนึ่งของวิธีที่ผมสร้างงาน และผมใช้มันได้เก่ง — ตลอดโปรเจกต์นี้ผมทำงานคู่กับ **Claude Code** (เอเจนต์ช่วยเขียนโค้ดบนเทอร์มินัลของ Anthropic): ป้อน ROS log วันแข่งจริงให้มันไล่หา localization drift กับ recovery loop ของ Nav2, ขับมันรีวิวและ refactor จน state machine ภารกิจสะอาดขึ้นอย่างเห็นได้ชัด และเขียนเอกสาร bilingual กับไฟล์ความรู้ `CLAUDE.md` ไปด้วยกัน
+
+ข้อได้เปรียบไม่เคยอยู่ที่แค่ "มีเครื่องมือ" — ใคร ๆ ก็มีได้ แต่อยู่ที่ "รู้วิธีรีดงานออกมาจากมัน": ป้อน context ให้ตรง จับตาสิ่งที่มันตอบกลับให้คม และมีวิจารณญาณพอจะดันต่อจนผลออกมาดีจริง ความคล่องนี้ทำให้ผมเร็วขึ้นและโค้ดแน่นขึ้น และมันคือความได้เปรียบแบบเดียวกับที่ผมจะหยิบไปใช้กับทุกอย่างที่สร้างต่อจากนี้
+
+---
+
 ## 🙏 Credits / เครดิต
 
 This project is built on the **micro-ROS example by [inex (inexglobal)](https://github.com/inexglobal/microROS-X_Example)**, which provided the working base: robot bring-up, teleop, the micro-ROS agent setup, and the initial Nav2 / SLAM / vision launch files. Some of those files (e.g. the SLAM launch and the Nav2 launch) are used largely as-is — credit to inex.
