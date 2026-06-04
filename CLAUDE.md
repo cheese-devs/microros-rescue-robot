@@ -59,7 +59,7 @@ For Nav2-specific architecture (waypoint flow, mission_script gating, Nav2 param
 
 ## Robot config (over USB-serial)
 
-`start_up_robot/config_robot_RRR26.py` is the one venue template. Before a session, edit the 3 placeholders at the bottom (`__main__`): WiFi SSID + password (venue's 2.4 GHz), agent IP (host PC on that network, `hostname -I`), and `set_car_type`. The repo ships these as `<SSID>`/`<PASSWORD>`/`[0,0,0,0]` placeholders — real per-network values are never committed. Domain ID must match between robot config and host `ROS_DOMAIN_ID` (default 99).
+`start_up_robot/config_robot_RRR26.py` is the one venue template. Before a session, edit the 3 placeholders at the bottom (`__main__`): WiFi SSID + password (venue's 2.4 GHz), agent IP (host PC on that network, `hostname -I`), and `set_car_type`. The repo ships these as `<SSID>`/`<PASSWORD>`/`[0,0,0,0]` placeholders — real per-network values are never committed. Domain ID must match between robot config and host `ROS_DOMAIN_ID` (default 20).
 
 ## Gotchas
 
